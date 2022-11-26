@@ -22,14 +22,39 @@ class AdListView(ListAPIView):
 
     def get(self, request, *args, **kwargs):
         category_ids = request.GET.getlist('cat', None)
-        category_query = None
+        text = request.GET.get('text', None)
+        location = request.GET.get('location', None)
+        price_from = request.GET.get('price_from', None)
+        price_to = request.GET.get('price_to', None)
+        search_query = None
         for category_id in category_ids:
-            if category_query is None:
-                category_query = Q(category__id__exact=category_id)
+            if search_query is None:
+                search_query = Q(category__id__exact=category_id)
             else:
-                category_query |= Q(category__id__exact=category_id)
-        if category_query:
-            self.queryset = self.queryset.prefetch_related('category').filter(category_query)
+                search_query |= Q(category__id__exact=category_id)
+        if text:
+            if search_query is None:
+                search_query = Q(name__icontains=text)
+            else:
+                search_query |= Q(name__icontains=text)
+        if location:
+            if search_query is None:
+                search_query = Q(author__location__name__icontains=location)
+            else:
+                search_query |= Q(author__location__name__icontains=location)
+        if price_from:
+            if search_query is None:
+                search_query = Q(price__gte=price_from)
+            else:
+                search_query &= Q(price__gte=price_from)
+        if price_to:
+            if search_query is None:
+                search_query = Q(price__lte=price_to)
+            else:
+                search_query &= Q(price__lte=price_to)
+        if search_query:
+            self.queryset = self.queryset.select_related('author').prefetch_related('category').filter(search_query).\
+                order_by('-price')
         return super(AdListView, self).get(request, *args, **kwargs)
 
 
