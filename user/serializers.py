@@ -1,6 +1,7 @@
 from rest_framework import serializers
 
-from location.models import LocationPostSerializer, Location
+from location.models import Location
+from location.serializers import LocationPostSerializer
 from user.models import User
 
 
