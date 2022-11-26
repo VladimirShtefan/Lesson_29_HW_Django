@@ -1,13 +1,14 @@
 import json
 
-from django.core.paginator import Paginator
+from django.db.models import Q
 from django.http import JsonResponse, Http404
 from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
-from django.views.generic import ListView, CreateView, DetailView, UpdateView, DeleteView
+from django.views.generic import CreateView, DetailView, UpdateView, DeleteView
+from rest_framework.generics import ListAPIView
 
-from ad.models import Ad, AdListSerializer, AdPostSerializer, AdPatchSerializer
-from avito import settings
+from ad.serializers import AdListSerializer, AdPostSerializer, AdPatchSerializer
+from ad.serializers import Ad
 
 
 def index(request):
@@ -15,22 +16,21 @@ def index(request):
         return JsonResponse({"status": "ok"}, status=200)
 
 
-class AdListView(ListView):
-    model = Ad
+class AdListView(ListAPIView):
+    queryset = Ad.objects.all()
+    serializer_class = AdListSerializer
 
     def get(self, request, *args, **kwargs):
-        super(AdListView, self).get(request, *args, **kwargs)
-        paginator = Paginator(self.object_list.select_related('author').prefetch_related('category').order_by('-price'),
-                              settings.TOTAL_ON_PAGE)
-        page_number = request.GET.get('page')
-        page_object = paginator.get_page(page_number)
-        ads_serializer = AdListSerializer(page_object, many=True)
-        response = {
-            'items': ads_serializer.data,
-            'total': paginator.count,
-            'num_pages': paginator.num_pages,
-        }
-        return JsonResponse(response, safe=False, status=200)
+        category_ids = request.GET.getlist('cat', None)
+        category_query = None
+        for category_id in category_ids:
+            if category_query is None:
+                category_query = Q(category__id__exact=category_id)
+            else:
+                category_query |= Q(category__id__exact=category_id)
+        if category_query:
+            self.queryset = self.queryset.prefetch_related('category').filter(category_query)
+        return super(AdListView, self).get(request, *args, **kwargs)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
