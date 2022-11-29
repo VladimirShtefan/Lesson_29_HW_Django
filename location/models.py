@@ -1,5 +1,4 @@
 from django.db import models
-from rest_framework import serializers
 
 
 class Location(models.Model):
@@ -13,17 +12,3 @@ class Location(models.Model):
 
     def __str__(self):
         return self.name
-
-
-class LocationSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Location
-        fields = '__all__'
-
-
-class LocationPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
-
-    class Meta:
-        model = Location
-        fields = '__all__'

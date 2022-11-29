@@ -1,10 +1,8 @@
-from django.urls import path
+from rest_framework import routers
 
-from location import views
+from location.views import LocationViewSet
 
+router = routers.SimpleRouter()
+router.register(r'', LocationViewSet)
 
-urlpatterns = [
-   path('', views.LocationListView.as_view(), name='locations'),
-   path('<int:pk>/', views.LocationDetailView.as_view(), name='detail_location'),
-   path('create/', views.LocationCreateView.as_view(), name='create_location'),
-]
+urlpatterns = router.urls

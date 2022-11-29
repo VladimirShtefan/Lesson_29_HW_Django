@@ -1,7 +1,6 @@
 from django.db import models
-from rest_framework import serializers
 
-from location.models import Location, LocationPostSerializer
+from location.models import Location
 
 
 class User(models.Model):
@@ -26,29 +25,3 @@ class User(models.Model):
 
     def __str__(self):
         return self.username
-
-
-class UserSerializer(serializers.ModelSerializer):
-    total_ads = serializers.SerializerMethodField()
-
-    def get_total_ads(self, obj):
-        return obj.user_ad.filter(is_published=True).count()
-
-    class Meta:
-        model = User
-        depth = 1
-        fields = '__all__'
-
-
-class UserPostSerializer(serializers.ModelSerializer):
-    id = serializers.IntegerField(required=False)
-    location = LocationPostSerializer()
-
-    def create(self, validated_data):
-        location_data = validated_data.pop('location')
-        location, _ = Location.objects.get_or_create(**location_data)
-        return User.objects.create(location=location, **validated_data)
-
-    class Meta:
-        model = User
-        fields = ('id', 'first_name', 'last_name', 'username', 'password', 'role', 'age', 'location')

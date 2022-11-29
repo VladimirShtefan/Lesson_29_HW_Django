@@ -5,7 +5,8 @@ from django.utils.decorators import method_decorator
 from django.views.decorators.csrf import csrf_exempt
 from django.views.generic import ListView, DetailView, CreateView, UpdateView, DeleteView
 
-from category.models import Category, CategorySerializer, CategoryPostSerializer
+from category.models import Category
+from category.serializers import CategorySerializer, CategoryPostSerializer
 
 
 class CategoryListView(ListView):
